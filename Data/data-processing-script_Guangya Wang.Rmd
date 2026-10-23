@@ -1,0 +1,255 @@
+---
+title: "data-processing-script_Guangya Wang"
+author: "Guangya Wang"
+date: "2026-10-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+---
+title: 'PSY221A: Data Validation and Wrangling'
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+
+```
+
+H1: Employment status may predict daily free time.
+
+H2: Daily free time may predict collectivistic and individualistic attitudes.
+
+## 1. Load the package and data
+
+```{r load, message=FALSE}
+#load the codebook package
+library(codebook)
+
+#load data/raw/data_doctored.csv
+raw <- read.csv("Data/Raw/data_doctored.csv")
+
+#check row and column counts, and inspect the first few rows
+dim(raw)
+str(raw)
+
+#make data with ID, employment status, daily free time, collectivistic and individulistic attitudes; keep raw unchanged
+
+Gdata <- raw[,c("ResponseId",
+               "Employment", 
+               "Time_free_1",
+               "Individualism_col_1","Individualism_col_2","Individualism_col_3","Individualism_col_4")]
+
+dim(Gdata)
+str(Gdata)
+
+
+
+
+
+
+```
+
+
+## 2. Check participant IDs
+
+```{r participant_ids}
+
+#count na
+sum(is.na(Gdata$ResponseId))
+#count blank
+sum(Gdata$ResponseId=="",na.rm=TRUE) #rm means remove, remove the na when do this sum because we have checked the na
+#count duplicates
+sum(duplicated(Gdata$ResponseId)) #to do these steps, can also run summary(data$ResponseId) in the Console
+#inspect records with missing or blank IDs
+missingID <- which(is.na(Gdata$ResponseId)) #and then run missingID in the Console, and can find the missingID.
+print(Gdata[missingID,])
+# and also, can run data[missingID,] in the Counsole, then the row of missingID will show
+
+#remove the known empty record with no ID, then check the row count
+Gdata <- Gdata[!is.na(Gdata$ResponseId),]
+#! means reverse, that means if I do not have this, the code above will only leave the na data and delete all of the other data
+```
+
+
+## 3. Recode employment status
+
+```{r employment status}
+# codebook: 1 = Full-time, 2 = Part-time, 3 = Self-employed, 4 = Unemployed, 5 = Student, 6 = Retired
+table(Gdata$Employment,useNA="ifany")
+#turn Employment into a factor with labels
+Gdata$Employment <- factor(Gdata$Employment,
+                         levels = c(1,2,3,4,5,6),
+                         labels = c("Full-time","Part-time","Self-employed","Unemployed","Student","Retired"))
+
+# Here I decided do not use the data of the participant who chose multiple Employment status, as multiple Employment can be a confusion of the impact of Employment on the daily free time. Meanwhile, some of the combinations looks "unreasonable", for example, some participants chose "student" and "full-time" at the same time, we cannot know the true situation of them (if they are a person with full-time job but still studying something in school? Or they are srudents mainly but are near to their graduation thus they have a full-time job? -- there are so many possibilities of these situations.)
+
+table(Gdata$Employment,useNA="ifany")
+# rerun this and to see the numbers of the participants in each employment status
+```
+
+## 4. Validate daily free time
+
+```{r daily free time}
+
+
+
+#see summary of variables
+summary(Gdata$Time_free_1)
+
+#count NAs
+sum(is.na(Gdata[,"Time_free_1"]))
+
+#leave the total NA if any item is missing
+str(Gdata[, "Time_free_1"])
+
+
+
+
+#make Gh1Data with ID, Employment, and daily free time
+Gh1Data <- Gdata[!is.na(Gdata$Time_free_1) & !is.na(Gdata$Employment),
+               c("ResponseId","Employment","Time_free_1")]
+
+
+```
+
+
+## 5. Validate Collectiveistic and individualistic attitudes
+
+```{r collectivism_vars}
+#group all four Individualism_col_ variables
+
+# Here's a little bit weird -- if the values of this variable is higher, it means that the participant has a greater collectivism, but in the database, this variable was measured by items called "Indicidualism". Thus there's maybe a little bit confict, but the two things are the same.
+
+collect_vars <- c("Individualism_col_1","Individualism_col_2","Individualism_col_3","Individualism_col_4")
+
+
+#see summary of variables
+summary(Gdata[,collect_vars])
+
+
+#count NAs
+colSums(is.na(Gdata[,collect_vars]))
+
+#calculate total score; leave the total NA if any item is missing
+str(Gdata[, collect_vars])
+
+Gdata[, collect_vars] <- lapply(Gdata[, collect_vars], function(x) {
+  x[x == "-99" | x == -99] <- NA
+  x
+})
+
+Gdata[, collect_vars] <- lapply(Gdata[, collect_vars], function(x) as.numeric(as.character(x)))
+
+Gdata$collectTotal <- rowSums(Gdata[,collect_vars],na.rm=FALSE) #na.ra=FALSE is to remove the na, this is vital
+summary(Gdata$collectTotal)
+
+
+#make Gh2Data with ID, daily free time, and collect
+Gh2Data <- Gdata[!is.na(Gdata$Time_free_1) & !is.na(Gdata$collectTotal),
+               c("ResponseId","Time_free_1","collectTotal")]
+  
+summary(Gh2Data$Time_free_1)
+summary(Gh2Data$collectTotal)
+######## do not have results, check ##########
+
+
+```
+
+
+## 6. Check the final tables
+
+```{r final_tables}
+#check rows, columns, types, and missing values in Gh1Data
+#one row per participant, one column per variable
+dim(Gh1Data)
+str(Gh1Data)
+head(Gh1Data)
+colSums(is.na(Gh1Data))
+table(Gh1Data$Employment,useNA="ifany")
+range(Gh1Data$Time_free_1)
+sum(duplicated(Gh1Data$ResponseId))
+
+#repeat the checks for Gh2Data
+dim(Gh2Data)
+str(Gh2Data)
+head(Gh2Data)
+colSums(is.na(Gh2Data))
+range(Gh2Data$Time_free_1)
+range(Gh2Data$collectTotal)
+sum(duplicated(Gh2Data$ResponseId))
+```
+
+## 7. Add labels and generate codebooks
+
+The descriptions come from the original codebook and our scoring decisions.
+`compact_codebook()` adds summaries from the actual data. Knit the Rmd to
+display the formatted codebooks.
+
+```{r variable_labels}
+#add a description to each Gh1Data column, in column order
+#include the source codes, meaning, and units
+var_label(Gh1Data) <- c(
+  "Unique participant ID (ResponseId)",
+  "Employment: original codes 1=Full-time, 2=Part-time, 3=Self-employed, 4= Unemployed, 5=Student, 6=Retired; now stored as a factor",
+  "daily free time; 0-360 hours; zero is valid"
+)
+
+#add a description to each Gh2Data column, in column order
+#include response anchors and the commitment scoring rule
+var_label(Gh2Data) <- c(
+  "Unique participant ID (ResponseId)",
+  "daily free time; 0-360 hours; zero is valid",
+  "collectivism: mean of Individualism_col_1-4 responses, each 1=Definitrly disagree to 7=Definitely agree; no reverse coding"
+)
+
+```
+
+
+
+```{r h1_codebook}
+#generate the h1Data codebook
+compact_codebook(Gh1Data)
+
+```
+
+
+```{r h2_codebook}
+#generate the h2Data codebook
+compact_codebook(Gh2Data)
+
+```
+
+## 9. Save the final tables
+
+```{r save}
+#create data/processed_data if needed
+dir.create("data/processed_data",recursive=T,showWarnings=F)
+
+#save Gh1Data and Gh2Data without an extra row-number column
+write.csv(Gh1Data,"data/processed_data/practice_h1.csv",row.names=F)
+write.csv(Gh2Data,"data/processed_data/practice_h2.csv",row.names=F)
+
+#read the files back and confirm their dimensions
+h1Saved <- read.csv("data/processed_data/practice_h1.csv")
+h2Saved <- read.csv("data/processed_data/practice_h2.csv")
+dim(h1Saved)
+dim(h2Saved)
+
+```
+
+
