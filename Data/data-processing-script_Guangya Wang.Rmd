@@ -41,7 +41,7 @@ H2: Daily free time may predict collectivistic and individualistic attitudes.
 library(codebook)
 
 #load data/raw/data_doctored.csv
-raw <- read.csv("Data/Raw/data_doctored.csv")
+raw <- read.csv("/Users/guangyawang/Class/PSY 221A - design & measurement/PSY221A_project_guangya wang/Data/Raw/data_doctored.csv")
 
 #check row and column counts, and inspect the first few rows
 dim(raw)

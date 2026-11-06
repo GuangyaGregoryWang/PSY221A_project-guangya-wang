@@ -1,0 +1,145 @@
+---
+title: "lab04_Practice"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Hypothesis
+
+H1: Employment status may predict daily free time.
+
+H2: Daily free time may predict collectivistic attitudes.
+
+```{r load package}
+library(ggplot2)
+library(ggrain)
+
+```
+
+## Load the processed data
+
+```{r loadData}
+#load processed data
+Gh1Data <- read.csv("Data/processed_data/Gh1Data.csv")
+
+Gh2Data <- read.csv("Data/processed_data/Gh2Data.csv")
+
+#reorganize categorical variable (the employment is already the factor in the database, thus we do not need to convert it to factor again.)
+table(Gh1Data$Employment)
+```
+
+## H1 - Box Plot
+
+```{r H1Box}
+#Box plot
+#The line is the median; the box covers the middle 50% of responses (Q1-Q3).
+#Whiskers reach the most extreme observations within 1.5 IQR of the box edges.
+
+Gh1box <- ggplot(Gh1Data,
+                aes(x = Employment, y = Time_free_1, fill = Employment)) + 
+  geom_boxplot() + 
+  labs(x="Employment Status",
+        y="Daily Free Time",
+        title="The relationship between employment and daily free time") + 
+  theme_minimal(base_size=12)
+
+Gh1box
+
+
+```
+
+## H1 - Violin Plot (with Box Plot)
+
+```{r H1Violin}
+#Violin Plot
+#Wider sections show where responses are more concentrated within each group.
+#The shape depends on smoothing; integer scores can create bumps.
+Gh1viol <- ggplot(Gh1Data,
+                aes(x = Employment, y = Time_free_1, colour = Employment)) + 
+  geom_violin(width = 1, alpha = 0.6) + 
+  geom_boxplot(width = .12, alpha = 0.8) +
+  geom_jitter(width = 0.2, size = 0.5, alpha = 0.1)+
+  labs(x = "Employment Status",
+        y = "Daily Free Time",
+        title = "The relationship between employment and daily free time") + 
+  theme_minimal(base_size=12)
+
+Gh1viol
+
+```
+
+## H1 - Raincloud Plot
+
+```{r H1Raincloud}
+#Raincloud Plot
+#A raincloud combines a half-violin, a box plot, and individual responses.
+
+  Gh1rain <- ggplot(Gh1Data,
+                aes(x = Employment, y = Time_free_1, colour = Employment)) + 
+  geom_rain(alpha=.5) + 
+  labs(x = "Employment Status",
+        y = "Daily Free Time",
+        title = "The relationship between employment and daily free time") + 
+  theme_minimal(base_size = 12)
+
+Gh1rain
+```
+
+## H2 - Scatter Plots
+
+```{r H2Scatter}
+#Scatter Plot
+Gh2point <- ggplot(Gh2Data,
+                  aes(x = Time_free_1, y = collectTotal)) + 
+  geom_point() + 
+  labs(x="Daily free time",
+        y="Collectivistic attitude",
+        title="Relationship between daily free time and collectiveistic attitude")+
+  theme_minimal(base_size = 12)
+
+Gh2point
+
+#Plot looks weird... why?
+# nrow(h2Data)
+# nrow(unique(h2Data[,c("qoa","commitment")]))
+
+
+#Jitter
+
+Gh2jitter <- ggplot(Gh2Data,
+                  aes(x = Time_free_1, y = collectTotal)) + 
+  geom_jitter(width=.12, height=.04,alpha=.04,size=.6) + 
+  labs(x="Daily free time",
+        y="Collectivistic attitude",
+        title="Relationship between daily free time and collectiveistic attitude")+
+  theme_minimal(base_size = 12)
+
+Gh2jitter
+
+
+
+```
+
+## H2 - Smooth Line
+
+```{r}
+#Scatter Plot with line
+Gh2line <- Gh2jitter + geom_smooth(method="lm")
+Gh2line
+
+```
+
+## Save figures
+
+```{r saveFigures}
+#Run after creating the plots. Save PNG files in the project's figures folder.
+dir.create("figures", showWarnings = FALSE)
+ggsave("figures/H1_figure_rainCloud.png",plot=Gh1rain, width=10,height=6,dpi=300)
+ggsave("figures/H2_figure_line.png",plot=Gh2line, width=10,height=6,dpi=300)
+```
+
