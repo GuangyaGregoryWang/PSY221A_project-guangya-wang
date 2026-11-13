@@ -1,0 +1,108 @@
+---
+title: "Employment status, daily free time, and collectivistic attitude"
+author: "Guangya (Gregory) Wang"
+format:
+  html:
+    toc: true ## table of contant, true的话，如果生成html之后，就会有一个目录一样的东西
+    code-fold: true
+execute:
+  echo: true ## means also save the outputs in the html (for example, maybe can also in some other things)
+---
+```{r}
+## command + option + I, to add a track.
+```
+
+```{r}
+#| label: load-data
+#| include: false
+library(ggplot2)
+library(ggrain)
+
+h1Data <- read.csv("data/processed_data/practice_h1.csv")
+h1Data$Employment <- factor(h1Data$Employment,
+                         levels = c(1,2,3,4,5,6),
+                         labels = c("Full-time","Part-time","Self-employed","Unemployed","Student","Retired"))
+
+h2Data <- read.csv("data/processed_data/practice_h2.csv")
+```
+
+## Hypothesis 1
+
+Different employment status can predict daily free time.
+
+### Variables and descriptive statistics 这个label是比##hypothesis 1更低一级的标题。上面说的会出现目录就是这些标题。
+
+- **Sex at birth (`Sex_birth`):** A categorical variable with three groups: Male, Female, and Intersex.
+- **Importance of partner physical attractiveness (`preference_imp_physat`):** Points allocated to physical attractiveness from a total budget of 30 points across six partner characteristics. Higher values indicate greater relative importance.
+
+```{r}
+#| label: h1-descriptives
+# Count respondents in each group.
+table(h1Data$Employment)
+
+# Summarize attractiveness points separately for each group.
+by(h1Data$Time_free_1, h1Data$Employment, summary) #show分类变量（sex）的各个水平中连续变量（imp_physat）的情况
+```
+
+### Graph
+
+@fig-attractiveness shows the distribution of points by sex at birth. The half-violin shows the shape of the distribution, the box summarizes the median and quartiles, and the dots represent individual responses.
+
+```{r}
+#| label: fig-attractiveness
+#| fig-cap: "Points allocated to daily free time, by employment status." ########### 这个是加图注的！
+#| 
+#| fig-width: 8
+#| fig-height: 5
+
+ggplot(h1Data, aes(x = Employment, y = Time_free_1,
+                   fill = Employment)) +
+  geom_rain(alpha = 0.5, point.args = list(alpha = 0.04, size = 0.6)) +
+  labs(x = "Employment Status", y = "Daily free time") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+
+## H2. People who have more daily free time will have higher level of collectivistic attitude #两个井号就是第一级标题（或许是第二级？）
+
+collectiveistic attitude is associated with daily free time.
+
+### Variables and descriptive statistics
+
+- **collective attitude:** How strongly someone prioritizes group welfare over personal rewards and goals. These items express collectivistic values. Responses range from 1 (Definitely disagree) to 7 (Definitely agree).
+
+This dataset includes respondents who were dating, in a committed relationship, or married.
+
+```{r}
+#| label: h2-descriptives
+summary(h2Data[, c("Time_free_1", "collectTotal")])
+```
+
+### Graph
+
+@fig-commitment shows the relationship between daily free time and collective attitude. Points are jittered to make overlapping responses easier to see; the recorded scores are unchanged. The line summarizes the linear trend.
+
+```{r}
+#| label: fig-collectivistic attitude
+#| fig-cap: "Daily free time and collectivistic attitude."
+#| fig-width: 8
+#| fig-height: 5
+
+ggplot(h2Data, aes(x = Time_free_1, y = collectTotal)) +
+  geom_jitter(width = .12, height = .04, alpha = .04, size = .6) +
+  geom_smooth(method = "lm") +
+  labs(x = "Daily free time (minutes/day)",
+       y = "collectivistic attitude (1–7)") +
+  theme_minimal()
+```
+
+### Observed trend
+
+```{r}
+#| label: correlation
+r <- cor(h2Data$Time_free_1, h2Data$collectTotal, use = "complete.obs")
+round(r, 2) #保留几位小数。r是需要操作的值，2是位数。
+```
+
+The correlation was `{r} round(r, 2)`, indicating a weak negative association. Respondents who reported more confidence in finding a new partner tended to report lower commitment.
