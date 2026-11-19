@@ -9,11 +9,6 @@ format:
 execute:
   echo: true ## means also save the outputs in the html (for example, maybe can also in some other things)
 ---
-
-###JK: Submit your descriptive-statistics code as a separate Rmd or R script as well. ###
-# I still found the descriptive statistics only inside this Quarto report. Put the code that loads and summarizes your final H1 and H2 data in its own assignment file and push it.
-###  End of comment ###
-
 ```{r}
 ## command + option + I, to add a track.
 ```
@@ -25,25 +20,12 @@ library(ggplot2)
 library(ggrain)
 
 h1Data <- read.csv("data/processed_data/practice_h1.csv")
-###JK: Employment already contains category names, so keep those names when making the factor. ###
-# The current levels = c(1,2,3,4,5,6) changes all 89,135 employment responses to NA, leaving the group counts and group summaries empty.
-# Replace the factor assignment with:
-# h1Data$Employment <- factor(h1Data$Employment, levels = c("Full-time", "Part-time", "Self-employed", "Unemployed", "Student", "Retired"))
-# table(h1Data$Employment, useNA = "ifany")
-# The H2 summary already covers free time and collectivistic attitudes.
-###  End of comment ###
-
 h1Data$Employment <- factor(h1Data$Employment,
                          levels = c(1,2,3,4,5,6),
                          labels = c("Full-time","Part-time","Self-employed","Unemployed","Student","Retired"))
 
 h2Data <- read.csv("data/processed_data/practice_h2.csv")
 ```
-
-###JK: Replace the remaining class-example descriptions with your own H1 variables. ###
-# H1 uses Employment and Time_free_1. Describe the employment categories and daily free time in minutes in the variables section, figure paragraph, and caption.
-# The current sex-at-birth and partner-attractiveness descriptions refer to the class example.
-###  End of comment ###
 
 ## Hypothesis 1
 
@@ -115,12 +97,6 @@ ggplot(h2Data, aes(x = Time_free_1, y = collectTotal)) +
        y = "collectivistic attitude (1–7)") +
   theme_minimal()
 ```
-
-###JK: Match the H2 figure reference and interpretation to free time and collectivistic attitudes. ###
-# Give the H2 figure a label without spaces, such as fig-collectivism, and refer to it as @fig-collectivism in the paragraph above.
-# The correlation is about -0.02, a very small negative association between daily free time and collectivistic attitudes. Replace the sentence about finding a new partner and commitment with a sentence about these two variables.
-# After fixing the Employment factor described above, render and update docs/index.html so the website also shows the corrected H1 groups.
-###  End of comment ###
 
 ### Observed trend
 
